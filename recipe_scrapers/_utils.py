@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import re
 
 
@@ -25,7 +26,8 @@ def get_minutes(element):
         else:
             tstring = element.get_text()
         if '-' in tstring:
-            tstring = tstring.split('-')[1]  # sometimes formats are like this: '12-15 minutes'
+            # sometimes formats are like this: '12-15 minutes'
+            tstring = tstring.split('-')[1]
         if 'h' in tstring:
             tstring = tstring.replace('h', 'hours') + 'minutes'
         matched = TIME_REGEX.search(tstring)
@@ -55,7 +57,8 @@ def get_yields(element):
         if SERV_REGEX_TO.search(tstring):
             tstring = tstring.split(SERV_REGEX_TO.split(tstring)[1])[1]
 
-        matched = SERV_REGEX_NUMBER.search(tstring).groupdict().get('items') or 0
+        matched = SERV_REGEX_NUMBER.search(
+            tstring).groupdict().get('items') or 0
         servings = "{} serving(s)".format(matched)
 
         if SERV_REGEX_ITEMS.search(tstring) is not None:
@@ -73,8 +76,9 @@ def get_yields(element):
 def normalize_string(string):
     return re.sub(
         r'\s+', ' ',
-        string.replace(
+        string.encode('utf-8').replace(
             '\xa0', ' ').replace(  # &nbsp;
+            '\xc2', ' ').replace(  # &nbsp;
             '\n', ' ').replace(
             '\t', ' ').strip()
     )
