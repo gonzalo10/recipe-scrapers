@@ -28,9 +28,20 @@ class Yummly(AbstractScraper):
         return imageData['src']
 
     def total_time(self):
-        return get_minutes(
-            self.soup.find('div', {'class': 'recipe-summary-item unit'})
-        )
+        timeRaw = self.soup.find(
+            'div', {'class': 'recipe-summary-item unit h2-text'})
+        time = []
+        for span in timeRaw:
+            time.append(normalize_string(span.get_text()))
+        return time
+
+    def total_calories(self):
+        caloriesRaw = self.soup.find(
+            'div', {'class': 'recipe-summary-item nutrition h2-text'})
+        calories = []
+        for span in caloriesRaw:
+            calories.append(normalize_string(span.get_text()))
+        return calories
 
     def yields(self):
         return get_yields(

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
+import requests
+from bs4 import BeautifulSoup
 
 
 TIME_REGEX = re.compile(
@@ -17,6 +19,13 @@ SERV_REGEX_ITEMS = re.compile(
 SERV_REGEX_TO = re.compile(
     r'\d+(\s+to\s+|-)\d+', flags=re.I | re.X
 )
+
+
+def scrape_second_website(url):
+    page_data = requests.get(url).content
+    soup = BeautifulSoup(page_data, "html.parser")
+
+    return soup
 
 
 def get_minutes(element):
