@@ -49,13 +49,49 @@ class AllRecipes(AbstractScraper):
         return tags
 
     def raiting(self):
-        raitingRaw = self.soup.find(
-            'div',
-            {"class": "rating-stars"}
+        raitingScoreRaw = self.soup.find(
+            'span',
+            {"class": "review-star-text"}
         )
-        raitingScore = raitingRaw['data-ratingstars']
-        print(raitingScore)
+        raitingScore = 0
+        if raitingScoreRaw:
+            raitingScore = normalize_string(
+                raitingScoreRaw.get_text().split(':')[1].split()[0])
+        if not raitingScore:
+            raitingRaw = self.soup.find(
+                'div',
+                {"class": "rating-stars"})
+            if raitingRaw:
+                raitingScore = raitingRaw['data-ratingstars']
+
         return raitingScore
+
+    def images(self):
+        image = self.images_new()
+        if not image:
+            image = self.images_old()
+        return image
+
+    def images_old(self):
+        ingredientsContianer = self.soup.find(
+            'img',
+            {"class": "rec-photo"}
+        )
+        if not ingredientsContianer:
+            return
+        image_src = ingredientsContianer['src']
+        return image_src
+
+    def images_new(self):
+        imageContainer = self.soup.find(
+            "div", {"class": "image-container"})
+        if not imageContainer:
+            return
+        imageTag = imageContainer.find('img')
+        if not imageTag:
+            return
+        image_src = imageTag['src']
+        return image_src
 
     def ingredients_old(self):
         ingredientsContianer = self.soup.find(
@@ -85,7 +121,6 @@ class AllRecipes(AbstractScraper):
                                             {"class": "ingredients-item-name"})
             ingredientsList.append(normalize_string(ingredient.get_text()))
 
-        print(ingredientsList)
         return ingredientsList
 
     def recipe_summary(self):
@@ -99,6 +134,32 @@ class AllRecipes(AbstractScraper):
             'aside',
             {"class": "recipe-info-section"}
         )
+        macrosContainer = self.soup.find(
+            'div', {"class": "partial recipe-nutrition-section"})
+        if not macrosContainer:
+            return
+        macrosSummaryRaw = macrosContainer.find(
+            'div', {"class": "section-body"})
+        macrosText = macrosSummaryRaw.get_text().strip()
+        removedTitle = macrosText.replace("Full Nutrition", "").strip()
+
+        correctSodiumTypo = removedTitle.replace('sodium.', "sodium;")
+        parsedMacros = normalize_string(correctSodiumTypo).split(';')
+        withouWhiteSpaces = []
+        for macro in parsedMacros:
+            withouWhiteSpaces.append(macro.strip())
+        macrosSummary = {}
+        for macro in withouWhiteSpaces:
+            if not macro:
+                break
+            splitedMacro = macro.split(" ")
+            value = splitedMacro[0]
+            unit = splitedMacro[1]
+            if unit == 'calories':
+                unit = "Kcal"
+            title = splitedMacro[len(splitedMacro) - 1]
+            macrosSummary[title] = value+' '+unit
+
         if not recipeSummaryRaw:
             return
 
@@ -113,32 +174,62 @@ class AllRecipes(AbstractScraper):
                 {"class": "recipe-meta-item-header"}
             )
             name = normalize_string(nameRaw.get_text()).strip()
+            name = name.replace(":", "")
             valueRaw = item.find(
                 'div',
                 {"class": "recipe-meta-item-body"}
             )
+            if name == 'total':
+                name = "total_time"
             value = normalize_string(valueRaw.get_text()).strip()
-            summary[name] = value
-        return summary
+            summary[name.lower()] = value
+        for item in summary:
+            macrosSummary[item] = summary[item]
+        return macrosSummary
 
     def recipe_summary_old(self):
+        macrosSummaryRaw = self.soup.find(
+            'div', {"class": "nutrition-summary-facts"})
+
+        macrosSpanText = macrosSummaryRaw.get_text()
+        removedTitle = macrosSpanText.replace("Per Serving:", "")
+        removedEnding = removedTitle.replace("Full nutrition", "")
+        parsedMacros = normalize_string(removedEnding).split(';')
+        withouWhiteSpaces = []
+        for macro in parsedMacros:
+            withouWhiteSpaces.append(macro.strip())
+        macrosSummary = {}
+        for macro in withouWhiteSpaces:
+            if not macro:
+                break
+            splitedMacro = macro.split(" ")
+            value = splitedMacro[0]
+            unit = splitedMacro[1]
+            if unit == 'calories':
+                unit = "Kcal"
+            title = splitedMacro[len(splitedMacro) - 1]
+            macrosSummary[title] = value+' '+unit
         recipeSummary = self.soup.find(
             'span',
             {"class": "recipe-ingredients__header__toggles"}
         )
         timeRaw = recipeSummary.find('span',
                                      {"class": "ready-in-time"})
-        time = normalize_string(timeRaw.get_text())
+        if not timeRaw:
+            time = ''
+        if timeRaw:
+            time = normalize_string(timeRaw.get_text())
 
         servingNumberRaw = recipeSummary.find('meta',
                                               {"id": "metaRecipeServings"})
-        servings = normalize_string(servingNumberRaw['content'])
+        if not servingNumberRaw:
+            servings = ''
+        if servingNumberRaw:
+            servings = normalize_string(servingNumberRaw['content'])
 
-        caloriesRaw = recipeSummary.find('span',
-                                         {"class": "calorie-count"})
-        calories = normalize_string(caloriesRaw['aria-label'])
-
-        return {"total_time": time, "servings": servings, "calories": calories}
+        macrosSummary["total_time"] = time
+        macrosSummary["servings"] = servings
+        return macrosSummary
 
     def recipe_time(self):
         timeContainer = self.soup.find(
@@ -176,6 +267,8 @@ class AllRecipes(AbstractScraper):
             'div',
             {"class": "nutrition-body"}
         )
+        if not nutritionContianer:
+            return
 
         nutritionRows = nutritionContianer.findAll(
             'div',

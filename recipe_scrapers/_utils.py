@@ -85,9 +85,9 @@ def get_yields(element):
 def normalize_string(string):
     return re.sub(
         r'\s+', ' ',
-        string.encode('utf-8').replace(
-            '\xa0', ' ').replace(  # &nbsp;
-            '\xc2', ' ').replace(  # &nbsp;
-            '\n', ' ').replace(
-            '\t', ' ').strip()
+        string.encode('utf-8', "ignore")
+        .replace('\u00be', ' ').replace('\u2009', ' ')
+        .replace('\u215b', ' ').replace('\u00bd', ' ')
+        .replace('\u00be', ' ').replace('\u00ae', ' ')
+
     )
