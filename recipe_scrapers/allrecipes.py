@@ -15,13 +15,66 @@ class AllRecipes(AbstractScraper):
         ingredientsList = self.ingredients_new()
         if not ingredientsList:
             ingredientsList = self.ingredients_old()
+        curatedIngredientList = []
+        for ingredient in ingredientsList:
+            ingredient = ingredient.strip()
+            curatedIngredientList.append(ingredient)
+        return curatedIngredientList
+
+    def ingredients_old(self):
+        ingredientsContianer = self.soup.find(
+            'div',
+            {"id": "polaris-app"}
+        )
+
+        ingredientColumns = ingredientsContianer.findAll('ul')
+        ingredientsList = []
+        for column in ingredientColumns:
+            ingredients = column.findAll(
+                'span', {'itemprop': "recipeIngredient"})
+            for ingredient in ingredients:
+                ingredient = ingredient.get_text()
+                ingredientsList.append(normalize_string(
+                    ingredient.strip()))
+        return ingredientsList
+
+    def ingredients_new(self):
+        ingredients = self.soup.findAll(
+            'li',
+            {"class": "ingredients-item"}
+        )
+        if not ingredients:
+            return
+        ingredientsList = []
+        for ingredientRaw in ingredients:
+            ingredient = ingredientRaw.find('span',
+                                            {"class": "ingredients-item-name"})
+            ingredientsList.append(normalize_string(ingredient.get_text()))
+
         return ingredientsList
 
     def tags(self):
         tagsList = self.tags_new()
         if not tagsList:
             tagsList = self.tags_old()
-        return tagsList
+        curatedTagList = []
+        for tag in tagsList:
+            tag = tag.lower()
+            tag = tag.replace(",", ";")
+            tag = tag.replace("and", ";")
+            splitedTag = tag.split(";")
+            if(len(splitedTag) > 1):
+                for subTag in splitedTag:
+                    if subTag != "home" and subTag != "recipes":
+                        if subTag and subTag not in curatedTagList:
+                            subTag.strip()
+                            curatedTagList.append(subTag)
+            else:
+                if tag != "home" and tag != "recipes":
+                    if tag and tag not in curatedTagList:
+                        tag.strip()
+                        curatedTagList.append(tag)
+        return curatedTagList
 
     def tags_new(self):
         breadcrumbsRaw = self.soup.findAll(
@@ -63,7 +116,7 @@ class AllRecipes(AbstractScraper):
                 {"class": "rating-stars"})
             if raitingRaw:
                 raitingScore = raitingRaw['data-ratingstars']
-
+        raitingScore = round(float(raitingScore)*2)
         return raitingScore
 
     def images(self):
@@ -73,6 +126,16 @@ class AllRecipes(AbstractScraper):
         return image
 
     def images_old(self):
+        imageCountRawContainer = self.soup.find("span", {
+            "class": "picture-count-link"
+        })
+        if imageCountRawContainer:
+            imageCount = imageCountRawContainer.get_text()
+            if imageCount:
+                imageCount = imageCount.split(" ")
+                imageCount = int(imageCount[0])
+                if imageCount < 2:
+                    return
         ingredientsContianer = self.soup.find(
             'img',
             {"class": "rec-photo"}
@@ -83,6 +146,21 @@ class AllRecipes(AbstractScraper):
         return image_src
 
     def images_new(self):
+        imageCountRawContainer = self.soup.find("a", {
+            "class": "ugc-ratings-link ugc-photos-link"
+        })
+        if not imageCountRawContainer:
+            return
+        if imageCountRawContainer:
+            imageCount = imageCountRawContainer.get_text()
+            if imageCount:
+                imageCount = imageCount.split(" ")
+                imageCount = normalize_string(imageCount[0].strip())
+                if not imageCount:
+                    return
+                imageCount = int(imageCount)
+                if imageCount < 2:
+                    return
         imageContainer = self.soup.find(
             "div", {"class": "image-container"})
         if not imageContainer:
@@ -92,36 +170,6 @@ class AllRecipes(AbstractScraper):
             return
         image_src = imageTag['src']
         return image_src
-
-    def ingredients_old(self):
-        ingredientsContianer = self.soup.find(
-            'div',
-            {"id": "polaris-app"}
-        )
-
-        ingredientColumns = ingredientsContianer.findAll('ul')
-        ingredientsList = []
-        for column in ingredientColumns:
-            ingredients = column.findAll(
-                'span', {'itemprop': "recipeIngredient"})
-            for ingredient in ingredients:
-                ingredientsList.append(normalize_string(ingredient.get_text()))
-        return ingredientsList
-
-    def ingredients_new(self):
-        ingredients = self.soup.findAll(
-            'li',
-            {"class": "ingredients-item"}
-        )
-        if not ingredients:
-            return
-        ingredientsList = []
-        for ingredientRaw in ingredients:
-            ingredient = ingredientRaw.find('span',
-                                            {"class": "ingredients-item-name"})
-            ingredientsList.append(normalize_string(ingredient.get_text()))
-
-        return ingredientsList
 
     def recipe_summary(self):
         summary = self.recipe_summary_new()
@@ -134,12 +182,16 @@ class AllRecipes(AbstractScraper):
             'aside',
             {"class": "recipe-info-section"}
         )
+        if not recipeSummaryRaw:
+            return
         macrosContainer = self.soup.find(
             'div', {"class": "partial recipe-nutrition-section"})
         if not macrosContainer:
             return
         macrosSummaryRaw = macrosContainer.find(
             'div', {"class": "section-body"})
+        if not macrosSummaryRaw:
+            return
         macrosText = macrosSummaryRaw.get_text().strip()
         removedTitle = macrosText.replace("Full Nutrition", "").strip()
 
@@ -190,7 +242,8 @@ class AllRecipes(AbstractScraper):
     def recipe_summary_old(self):
         macrosSummaryRaw = self.soup.find(
             'div', {"class": "nutrition-summary-facts"})
-
+        if not macrosSummaryRaw:
+            return
         macrosSpanText = macrosSummaryRaw.get_text()
         removedTitle = macrosSpanText.replace("Per Serving:", "")
         removedEnding = removedTitle.replace("Full nutrition", "")
@@ -286,8 +339,13 @@ class AllRecipes(AbstractScraper):
 
     def instructions(self):
         instructionsData = self.instructions_old()
+        curatedInstructions = []
         if not instructionsData:
             instructionsData = self.instructions_new()
+        for instruction in instructionsData:
+            if instruction:
+                instruction.strip()
+                curatedInstructions.append(instruction)
         return instructionsData
 
     def instructions_old(self):

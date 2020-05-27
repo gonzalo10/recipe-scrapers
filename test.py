@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
-from runScraper import test
+from runScraper import test, scrapeRecipeUrl
+from parser import parseIngredients
 
 
-test('https://www.allrecipes.com/recipe/174347/quick-and-almost-professional-buttercream-icing/')
+test('https://healthyfitnessmeals.com/easy-protein-brownies/')
+
+# ingredient = parseIngredients(
+#     ["cans refrigerated crescent dinner rolls"])
+# print(ingredient)
+
+# print(scrapeRecipeUrl)

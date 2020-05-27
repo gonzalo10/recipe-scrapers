@@ -60,6 +60,7 @@ from .whatsgabycooking import WhatsGabyCooking
 from .wikicookbook import WikiCookbook
 from .yummly import Yummly
 from .geniuskitchen import GeniusKitchen
+from .healthyfitnessmeals import HealthyFitnessMeals
 
 SCRAPERS = {
     AllRecipes.host(): AllRecipes,
@@ -121,6 +122,7 @@ SCRAPERS = {
     WikiCookbook.host(): WikiCookbook,
     Yummly.host(): Yummly,
     GeniusKitchen.host(): GeniusKitchen,
+    HealthyFitnessMeals.host(): HealthyFitnessMeals,
 }
 
 
@@ -143,6 +145,7 @@ def url_path_to_dict(path):
 
 class WebsiteNotImplementedError(NotImplementedError):
     """ Error for when the website is not supported by this library. """
+
     def __init__(self, domain):
         self.domain = domain
 

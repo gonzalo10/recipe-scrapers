@@ -38,7 +38,8 @@ volumeUnits = [
     "scoops",
     "quarts",
     "dash",
-    "inch"
+    "inch",
+    "milliliter",
 ]
 
 extraText = [
@@ -65,6 +66,8 @@ uselessText = [
     "¼",
     "⅞",
     "⅔",
+    "¾",
+    "⅛",
     "¾",
     "peeled",
     "large",
@@ -102,7 +105,20 @@ uselessText = [
     "thinly",
     "packages",
     "®",
-    "granular"
+    "granular",
+    "cracked",
+    "cube",
+    "finely",
+    "mild",
+    "-",
+    "ripe",
+    "cans",
+    "refrigerated",
+    "container",
+    "to taste",
+    ")",
+    "(",
+    "()"
 ]
 
 
@@ -111,27 +127,51 @@ def cleanIngrdient(ingredient):
     textToRemove = re.findall(regex, ingredient)
     if textToRemove:
         ingredient = ingredient.replace(textToRemove[0], "")
-        ingredient = ingredient.replace("(", "")
-        ingredient = ingredient.replace(")", "")
-    if "chicken" in ingredient:
-        return "chicken"
-    removedDetails = ingredient.split(',')[0].split(' ')
+
     parsedIngredient = ''
-    for item in removedDetails:
+    for text in uselessText:
+        ingredient.replace(text, "")
+
+    ingredient = ingredient.split(" ")
+
+    for item in ingredient:
         if item in extraText:
             return parsedIngredient.strip()
-        if not any(map(str.isdigit, item)) and item not in volumeUnits and item not in uselessText:
-            parsedIngredient = parsedIngredient + ' ' + item
-    if parseIngredients:
+        if not any(map(str.isdigit, item)):
+            if item not in volumeUnits:
+                if item not in uselessText:
+                    parsedIngredient = parsedIngredient + ' ' + item
+    if parsedIngredient:
         return parsedIngredient.strip()
     return
 
 
 def parseIngredients(ingredientsRaw):
     ingredientList = []
+    ingredientsRaw = removeAnds(ingredientsRaw)
     for ingrdientItem in ingredientsRaw:
         parsedIngrdient = cleanIngrdient(ingrdientItem)
-        ingredientList.append(parsedIngrdient)
+        if parsedIngrdient:
+            ingredientList.append(parsedIngrdient)
+    return ingredientList
+
+
+def removeAnds(ingredientsRaw):
+    ingredientList = []
+    for ingredient in ingredientsRaw:
+        ingredient = ingredient.lower()
+        splitedIngredient = ingredient.split(',')
+        ingredient = splitedIngredient[0]
+        if len(splitedIngredient) > 1 and "chicken" in splitedIngredient[1]:
+            ingredientList.append("chicken")
+        else:
+            if "and" in ingredient:
+                splitedIngredient = ingredient.split(" and ")
+                for item in splitedIngredient:
+                    if len(item) > 0:
+                        ingredientList.append(item.strip())
+            elif len(ingredient) > 0:
+                ingredientList.append(ingredient.strip())
     return ingredientList
 
 
