@@ -48,7 +48,8 @@ class HealthyFitnessMeals(AbstractScraper):
             "div", {"class": "wprm-recipe-meta-container"})
         if not tagsRaw:
             return
-        taxomonyIndicator = self.soup.findAll(
+        tagsContainer = self.soup.find('div', {"class": "entry-content"})
+        taxomonyIndicator = tagsContainer.findAll(
             "a", {"class": "taxonomy-indicator"})
         curatedTags = []
         if taxomonyIndicator:

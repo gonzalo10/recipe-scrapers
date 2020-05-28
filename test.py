@@ -3,7 +3,7 @@ from runScraper import test, scrapeRecipeUrl
 from parser import parseIngredients
 
 
-test('https://healthyfitnessmeals.com/easy-protein-brownies/')
+test('https://healthyfitnessmeals.com/artichoke-stuffed-chicken/')
 
 # ingredient = parseIngredients(
 #     ["cans refrigerated crescent dinner rolls"])

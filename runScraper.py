@@ -12,21 +12,34 @@ def createSearchableKeys(ingredients, title, tags):
     for ingredient in ingredients:
         if not ingredient:
             return
+        if ingredient not in searchableKeys:
+            searchableKeys.append(ingredient)
+
         splitedIngredient = ingredient.split(" ")
+
         for ingredientWord in splitedIngredient:
             if ingredientWord not in searchableKeys:
                 searchableKeys.append(ingredientWord)
+
     title = title.split(" ")
+
     for titleWord in title:
         titleWord = titleWord.lower()
         if titleWord not in titleUslessWords:
             if titleWord not in searchableKeys:
                 searchableKeys.append(titleWord)
+
     for tag in tags:
         tag = tag.lower()
         tag = tag.strip()
         if tag not in searchableKeys:
             searchableKeys.append(tag)
+        splitedTag = tag.split(" ")
+        for uniqueTag in splitedTag:
+            uniqueTag = uniqueTag.strip()
+            if uniqueTag not in searchableKeys:
+                searchableKeys.append(uniqueTag)
+
     return searchableKeys
 
 
@@ -34,7 +47,7 @@ def scrapeRecipeUrl(url):
     scraper = scrape_me(url)
 
     rawIngredients = scraper.ingredients()
-    ingredients = parseIngredients(rawIngredients)
+    ingredients = parseIngredients(rawIngredients['parsed_ingredients'])
     tags = scraper.tags()
     title = scraper.title()
     image = scraper.images()
@@ -51,7 +64,7 @@ def scrapeRecipeUrl(url):
     data['instructions'] = scraper.instructions()
     data['full_nutrition_data'] = scraper.full_nutrition_data()
     data['parsed_ingredients'] = ingredients
-    data['ingredients'] = rawIngredients
+    data['ingredients'] = rawIngredients['ingredients']
     data['recipe_summary'] = recipe_summary
     data['searchable_keys'] = createSearchableKeys(ingredients, title, tags)
 
@@ -71,26 +84,10 @@ def test(url):
     scraper = scrape_me(url)
 
     rawIngredients = scraper.ingredients()
-    ingredients = parseIngredients(rawIngredients)
+    ingredients = parseIngredients(rawIngredients['parsed_ingredients'])
     tags = scraper.tags()
-    title = scraper.title()
-    image = scraper.images()
-    recipe_summary = scraper.recipe_summary()
+    print(tags)
 
-    data = {}
-    data['title'] = title
-    data['img_src'] = image
-    data['url'] = url
-    data['tags'] = tags
-    data['raiting'] = scraper.raiting()
-    data['instructions'] = scraper.instructions()
-    data['full_nutrition_data'] = scraper.full_nutrition_data()
-    data['parsed_ingredients'] = ingredients
-    data['ingredients'] = rawIngredients
-    data['recipe_summary'] = recipe_summary
-    data['searchable_keys'] = createSearchableKeys(
-        ingredients, title, tags)
-    print(data)
     return
 
 

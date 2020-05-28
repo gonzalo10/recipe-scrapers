@@ -44,7 +44,7 @@ volumeUnits = [
 
 extraText = [
     'to',
-    "or"
+    "or",
     "for"
 ]
 
@@ -118,7 +118,8 @@ uselessText = [
     "to taste",
     ")",
     "(",
-    "()"
+    "()",
+    "thin"
 ]
 
 
@@ -133,7 +134,6 @@ def cleanIngrdient(ingredient):
         ingredient.replace(text, "")
 
     ingredient = ingredient.split(" ")
-
     for item in ingredient:
         if item in extraText:
             return parsedIngredient.strip()
@@ -151,7 +151,7 @@ def parseIngredients(ingredientsRaw):
     ingredientsRaw = removeAnds(ingredientsRaw)
     for ingrdientItem in ingredientsRaw:
         parsedIngrdient = cleanIngrdient(ingrdientItem)
-        if parsedIngrdient:
+        if parsedIngrdient and parsedIngrdient not in ingredientList:
             ingredientList.append(parsedIngrdient)
     return ingredientList
 
